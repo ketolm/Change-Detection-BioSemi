@@ -5,8 +5,7 @@
 
 from __future__ import absolute_import, division, print_function
 from builtins import str
-from psychopy import data, logging, visual, sound, core, event, clock
-from psychopy.iohub.client import launchHubServer
+from psychopy import data, logging, visual, sound, core, event, clock, parallel
 from psychopy.visual import ShapeStim 
 import time
 import random
@@ -17,7 +16,7 @@ import pylab
 import os  # handy system and path functions
 import sys  # to get file system encoding
 
-def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialType,cue,numTrials,blocks):
+def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialType,cue,numTrials,blocks,participant):
     
     fCue = fCue
     fStim = fStim
@@ -30,19 +29,19 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
     cue = cue
     numTrials = numTrials 
     
-    _thisDir = "C:/Users/Mark Pettet/Documents/MK/"
+    _thisDir = "C:/Users/micah/Documents/GitHub/Change-Detection-BioSemi"
     
     # Store info about the experiment session
     expName = 'Change Detection.py'
-    expInfo = {'session': '001', 'participant': ''}
+    expInfo = {'session': '001', 'participant': participant}
     expInfo['date'] = data.getDateStr()  # add a simple timestamp
     expInfo['expName'] = expName
 
     # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
     filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
-    exp = data.ExperimentHandler(name=expName,
+    thisExp = data.ExperimentHandler(name=expName,
                     version='0.1',
-                    extraInfo={'participant':'jwp', 'ori':45},
+                    extraInfo={'participant': participant},
                     runtimeInfo=None,
                     originPath=None,
                     savePickle=True,
@@ -57,14 +56,13 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
     
     win = visual.Window(size = [1600, 900], units = 'height', fullscr=True)
     
-    print("keyboard")
-    # KEYBOARD STUFF
-    # Start iohub process. The iohub process can be accessed using `io`.
-    io = launchHubServer()
-    # A `keyboard` variable is used to access the iohub Keyboard device.
-    keyboard = psychopy.iohub.client.keyboard.Keyboard
-    events = keyboard.getKeys()
-    print("exp start")
+    # KEYBOARD STUFF 
+    # iohub is broken currently 
+    events = event.getKeys()
+    
+    # parallel port
+    port = parallel.ParallelPort(0xDFB8)
+    port.setData(0)
     
     # INITIALIZE
     # trialN       : number of trial
@@ -92,8 +90,10 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
 
     
     for t in range(numTrials):
-        print(t)
         trialTime = time.time()
+        eventNumber = (stimType * 100) + (trialType[t] * 10) + targChange[t] + (cue[t] * 2)
+        port.setData(eventNumber)
+        print(eventNumber)
         if (t % tPerBlock == 0) & (t > 1):
             event.clearEvents(eventType='keyboard')
             waiting = []
@@ -111,8 +111,6 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
         randTrial = random.randint(1,100)
         stimName  = 'stimType%d_trialType%d_cue%d_order%d (%d).png' % (stimType, trialType[t], cue[t], 0, randTrial)
         stimDir      = '%d%d%d/' % (stimType, trialType[t], cue[t]) + stimName
-        
-        print(t + .5)
 
         # presents cue
         for frameN in range(fCue + 1):
@@ -192,7 +190,10 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
         thisExp.addData('correctResponse',correctResp[t])
         thisExp.addData('trialNumber', trialN[t])
         thisExp.addData('stimulusHandle', stimName)
+        thisExp.addData('eventNumber', eventNumber)
         thisExp.nextEntry()
+        port.setData(0)
+        
             
     # these shouldn't be strictly necessary (should auto-save)
     thisExp.saveAsWideText(filename+'.csv')
@@ -200,6 +201,5 @@ def main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialTy
     logging.flush()
     # make sure everything is closed down
     thisExp.abort()  # or data files will save again on exit
-    io.quit()
     win.close()
     core.quit()

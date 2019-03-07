@@ -6,7 +6,7 @@ import pickle
 
 
 # PARTICIPANT'S INITIALS
-participant     = ''
+participant     = 'TESTINGWECANDOIT'
 
 # WANT TO GET TO 8 AND 8
 rectangleBlocks = 0
@@ -94,7 +94,7 @@ for j in range(blocksDone * numTrials, numTrials + blocksDone * numTrials):
     trialType.append(trials[j][1])
     cue.append(trials[j][2])
 
-block = main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialType,cue,numTrials,blocks)
+block = main(fCue,fStim,fInterval,fTest,fPause,tPerBlock,stimType,targChange,trialType,cue,numTrials,blocks,participant)
 
 
 
